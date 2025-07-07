@@ -23,8 +23,8 @@ Key Features:
 
 3. Latest releases
    - Current Version: 1.0.0
-   - View our [changelog](link-to-changelog) for details on recent updates
-   - Download the latest release from our [releases page](link-to-releases)
+   - View our [changelog](https://github.com/FastPix/migration-tool/blob/main/CHANGELOG.md) for details on recent updates
+   - Download the latest release from our [releases page](https://github.com/FastPix/migration-tool/releases/tag/v1.0.0)
 
 4. Guides and Documentation
    - User Guide: Complete documentation on how to use the migration tool

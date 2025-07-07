@@ -1,3 +1,4 @@
+import Client from "@fastpix/fastpix-node"; 
 import { PlatformCredentials } from './types';
 
 interface Videos {
@@ -15,7 +16,10 @@ const createMediaInFastPix = async (destinationPlatform: PlatformCredentials, mp
     const config = destinationPlatform?.config ? destinationPlatform.config : null;
     const maxResolutionTier = config?.maxResolutionTier ? config.maxResolutionTier : "1080p";
     const playbackPolicy = config?.playbackPolicy?.[0];
-     
+
+    const cleanedUrl = mp4_support.trim();
+    const finalUrl = cleanedUrl.replace(/\s+/g, ''); // Removes all whitespace
+
     const requestBody = {
         "metadata": {
             "originPlaformVideoId": videoId,
@@ -37,40 +41,35 @@ const createMediaInFastPix = async (destinationPlatform: PlatformCredentials, mp
             }),
         },
         "accessPolicy": playbackPolicy,
-        "subtitles":{
-            "name":"english",
-            "languageCode":"en"
-        },
+        // "subtitles":{
+        //     "languageName":"english",
+        //     "languageCode":"en"
+        // },
         "maxResolution": maxResolutionTier,
         "inputs": [
             {
                 type: 'video',
-                url: `${mp4_support}`,
+                url: `${finalUrl}`,
             },
         ],
         "mp4Support": "capped_4k",
     }; 
 
+    const fastpix = new Client({
+        accessTokenId: credentials.publicKey ?? null,
+        secretKey: credentials.secretKey ?? null,
+    });
+
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Basic ' + Buffer.from(`${credentials?.publicKey ? credentials.publicKey : null}:${credentials?.secretKey ? credentials.secretKey : null}`).toString('base64')
-            },
-            body: JSON.stringify(requestBody),
-        });
+        const response = await fastpix.uploadMediaFromUrl(requestBody);
 
-        const fastPixCreateMediaRes = await response.json();
+        if (response.success) {
 
-        if (response.ok) {
-
-            return { success: true, response: fastPixCreateMediaRes };
+            return { success: true, response: response };
             
         } else {
 
-            return { success: false, statusCode: response?.status, message: fastPixCreateMediaRes?.error?.message, fields: fastPixCreateMediaRes?.error?.fields, payload: requestBody  };
+            return { success: false, statusCode: response.success ? 200 : response?.error?.code, message: response?.error?.message, fields: response?.error?.fields, payload: requestBody  };
         }
     } catch (error) {
         

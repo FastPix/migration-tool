@@ -1,5 +1,6 @@
 import Mux from "@mux/mux-node";
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
+import { getBucketRegion } from "../amazonS3/route";
 
 interface AdditionalMetaData {
   environment?: string;
@@ -128,12 +129,16 @@ export async function POST(request: Request) {
     }
 
     case 's3': {
+
+      const bucketUrl = `https://${data.additionalMetadata.bucket}.s3.amazonaws.com`;
+      const region = await getBucketRegion(bucketUrl);
+
       const client = new S3Client({
         credentials: {
           accessKeyId: data.publicKey,
           secretAccessKey: data.secretKey!,
         },
-        region: data.additionalMetadata.region,
+        region: region,
       });
 
       const input = {

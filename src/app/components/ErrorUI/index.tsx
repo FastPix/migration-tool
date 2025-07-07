@@ -8,7 +8,7 @@ interface ErrorInterface {
 }
 
 const ErrorUI = ({title, description, code, icon}:ErrorInterface) => {
-  
+
   return (
     <div className="w-full h-min-screen flex items-center justify-center">
       <div className="flex flex-col items-center justify-center gap-y-1">
