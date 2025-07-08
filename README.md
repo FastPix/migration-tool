@@ -8,7 +8,7 @@ Key Features:
 
 # Getting Started
 1. Installation process
-   - Clone the repository: `git clone https://github.com/yourusername/migration-tool.git`
+   - Clone the repository: `git clone https://github.com/FastPix/migration-tool.git`
    - Navigate to project directory: `cd migration-tool`
    - Install dependencies: `npm install` or `yarn install`
 
@@ -23,8 +23,8 @@ Key Features:
 
 3. Latest releases
    - Current Version: 1.0.0
-   - View our [changelog](https://github.com/FastPix/migration-tool/blob/main/CHANGELOG.md) for details on recent updates
-   - Download the latest release from our [releases page](https://github.com/FastPix/migration-tool/releases/tag/v1.0.0)
+   - View our [changelog](https://github.com/FastPix/migration-tool/blob/feature/migration-tool/CHANGELOG.md) for details on recent updates
+   - Download the latest release from our [releases page](https://github.com/FastPix/migration-tool/releases/tag/v1.0.1)
 
 4. Guides and Documentation
    - User Guide: Complete documentation on how to use the migration tool
