@@ -22,7 +22,7 @@ Key Features:
    - Zustand & React Testing Library
 
 3. Latest releases
-   - Current Version: 1.0.0
+   - Current Version: 1.0.1
    - View our [changelog](https://github.com/FastPix/migration-tool/blob/feature/migration-tool/CHANGELOG.md) for details on recent updates
    - Download the latest release from our [releases page](https://github.com/FastPix/migration-tool/releases/tag/v1.0.1)
 
