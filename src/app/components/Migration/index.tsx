@@ -73,7 +73,7 @@ const MigrationStatus: React.FC = () => {
 
                         {originPlatformVideos?.map((video, index) =>
                             video?.data?.id ? (
-                                <div key={index} className="grid grid-cols-[1fr_2fr_1fr] border">
+                                <div key={video.data.id} className="grid grid-cols-[1fr_2fr_1fr] border">
                                     <div className="px-4 py-2 text-[14px]">{index + 1}</div>
                                     <div className="px-4 py-2 text-[14px]">{video?.data?.id}</div>
                                     <div className="px-4 py-2 text-[14px]">

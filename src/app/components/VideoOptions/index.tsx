@@ -16,6 +16,7 @@ const VideoOptions = () => {
         <button
           className="py-[12px] px-[16px] bg-black hover:bg-gray-800 text-white rounded-lg"
           onClick={() => {
+            console.log("[VideoOptions] 'Transfer Everything' selected — proceeding to select-destination");
             setAssetFilter([]);
             setCurrentStep('select-destination');
           }}

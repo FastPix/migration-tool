@@ -1,8 +1,8 @@
-interface propsType {
+interface PropsType {
   variant?: string;
 }
 
-const EmptyResult = ({ variant }: propsType) => {
+const EmptyResult = ({ variant }: PropsType) => {
   if (variant === "gray") {
 
     return (

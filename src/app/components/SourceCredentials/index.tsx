@@ -65,12 +65,12 @@ const PLATFORM_CREDENTIALS = [
 ];
 
 const PlatformForm = (props: Form) => {
-  const selectedPlatform = props?.type === "source" ? useMigrationStore((state) => state.sourcePlatform) : useMigrationStore((state) => state.destinationPlatform); // to show form based on step
   const [platformName, setPlatformName] = useState(""); // to show heading name
   const setCurrentStep = useMigrationStore((state) => state.setCurrentStep); // for setting up current step
   const currentStep = useMigrationStore((state) => state.currentStep);  // current step
   const sourcePlatform = useMigrationStore((state) => state.sourcePlatform); // for setting up platform
   const destinationPlatform = useMigrationStore((state) => state.destinationPlatform); // for setting up platform
+  const selectedPlatform = props?.type === "source" ? sourcePlatform : destinationPlatform; // to show form based on step
   const platform = currentStep === 'set-source-credentials' ? sourcePlatform : destinationPlatform;
   const setPlatform = useMigrationStore((state) => state.setPlatform);
   const [error, setError] = useState(false);
@@ -78,6 +78,7 @@ const PlatformForm = (props: Form) => {
   const [secretKey, setSecretKey] = useState("");
   const [publicKey, setPublicKey] = useState("");
   const [bucketName, setBucketName] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const platform = PLATFORM_CREDENTIALS.find(p => p.id === selectedPlatform?.id);
@@ -89,34 +90,66 @@ const PlatformForm = (props: Form) => {
     }
   }, [selectedPlatform]);
 
+  // Validate that every required field for the selected platform is non-empty
+  // (after trim). Catches whitespace-only paste, browser autofill quirks, and
+  // any programmatic submit that bypassed the on-change disable logic.
+  const validateRequiredFields = (rawData: Record<string, unknown>): Record<string, string> => {
+    const platformDef = PLATFORM_CREDENTIALS.find(p => p.id === selectedPlatform?.id);
+    const nextErrors: Record<string, string> = {};
+    if (platformDef) {
+      for (const field of platformDef.values) {
+        const raw = rawData[field.name];
+        const value = typeof raw === "string" ? raw.trim() : "";
+        if (!value) {
+          nextErrors[field.name] = `${field.label} is required`;
+        }
+      }
+    }
+    return nextErrors;
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
-    setButtonDisabled(true);
     const formData = new FormData(e.currentTarget);
     const rawData = Object.fromEntries(formData.entries());
+
+    console.log(`[SourceCredentials] Submitting credentials for platform=${selectedPlatform?.id}, step=${currentStep}`);
+
+    const nextErrors = validateRequiredFields(rawData);
+    if (Object.keys(nextErrors).length > 0) {
+      console.warn("[SourceCredentials] Validation failed:", nextErrors);
+      setFieldErrors(nextErrors);
+      return;
+    }
+    setFieldErrors({});
+
+    setButtonDisabled(true);
     const { publicKey, secretKey, ...additionalMetadata } = rawData;
-    const strippedPublicKey = publicKey ? publicKey.trim() : "";
-    const strippedSecreyKey = secretKey ? secretKey.trim() : "";
+    const strippedPublicKey = typeof publicKey === "string" ? publicKey.trim() : "";
+    const strippedSecreyKey = typeof secretKey === "string" ? secretKey.trim() : "";
     const data = { publicKey: strippedPublicKey, secretKey: strippedSecreyKey, additionalMetadata: { ...additionalMetadata, platformId: platform?.id } };
 
+    console.log(`[SourceCredentials] Calling /apicalls/validatecredentials for platformId=${platform?.id}`);
     const result = await fetch("/apicalls/validatecredentials", {
       method: 'POST',
       body: JSON.stringify(data),
     });
 
     if (result.ok) {
+      console.log(`[SourceCredentials] Credentials valid for platformId=${platform?.id}, step=${currentStep}`);
       if (currentStep === 'set-source-credentials') {
-        
+
         // @ts-ignore
         setPlatform("source", { ...platform, credentials: data });
         setCurrentStep('set-video-filter');
       } else if (currentStep === 'set-destination-credentials') {
-        
+
         // @ts-ignore
         setPlatform("destination", { ...platform, credentials: data });
         setCurrentStep('set-import-settings');
       }
     } else {
+      console.error(`[SourceCredentials] Credential validation failed — status=${result.status}`);
       setError(true);
     }
   };
@@ -125,74 +158,104 @@ const PlatformForm = (props: Form) => {
     const platform = PLATFORM_CREDENTIALS.find(p => p.id === selectedPlatform?.id);
     if (!platform) return null;
 
-    return platform.values.map((input, index) => (
-      <div className="mb-4" key={index}>
-        <label htmlFor={input.name} className="block mb-2 text-black text-[14px] font-normal">{input.label}:</label>
-        {input.type === 'select' ? (
-          <select id={input.name} name={input.name} className="border rounded w-full max-w-[400px] h-[48px] p-2" required>
-            
-            {/* @ts-ignore */}
-            {input.values.map((option, idx) => (
-              <option key={idx} value={option}>{option}</option>
-            ))}
-          </select>
-        ) : (
-          <input type={input.type} id={input.name} name={input.name} className="border rounded w-full max-w-[400px] h-[48px] p-2" required />
-        )}
-      </div>
-    ));
+    return platform.values.map((input) => {
+      const hasError = Boolean(fieldErrors[input.name]);
+      const inputClass = `border rounded w-full max-w-[400px] h-[48px] p-2 ${hasError ? 'border-red-500 focus:outline-red-500' : ''}`;
+      return (
+        <div className="mb-4" key={input.name}>
+          <label htmlFor={input.name} className="block mb-2 text-black text-[14px] font-normal">{input.label}:</label>
+          {input.type === 'select' ? (
+            <select id={input.name} name={input.name} className={inputClass} required aria-invalid={hasError}>
+              {/* @ts-ignore */}
+              {input.values.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          ) : (
+            <input type={input.type} id={input.name} name={input.name} className={inputClass} required aria-invalid={hasError} />
+          )}
+          {hasError && (
+            <p className="mt-1 text-red-500 text-[13px]" role="alert">{fieldErrors[input.name]}</p>
+          )}
+        </div>
+      );
+    });
+  };
+
+  const clearFieldError = (e) => {
+    // Clear the field's own error as soon as the user starts editing it
+    if (e.target?.name && fieldErrors[e.target.name]) {
+      setFieldErrors(prev => {
+        const next = { ...prev };
+        delete next[e.target.name];
+        return next;
+      });
+    }
+  };
+
+  const handleKeyPairChange = (e) => {
+    if (e.target.id === "secretKey") {
+      setButtonDisabled(!(publicKey !== "" && e.target.value !== ""));
+      setSecretKey(e.target.value);
+    } else if (e.target.id === "publicKey") {
+      setButtonDisabled(!(e.target.value !== "" && secretKey !== ""));
+      setPublicKey(e.target.value);
+    }
+  };
+
+  const handleApiVideoChange = (e) => {
+    if (e.target.id === "secretKey") {
+      setButtonDisabled(e.target.value === "");
+      setPublicKey(e.target.value);
+    }
+  };
+
+  const handleS3Change = (e) => {
+    if (e.target.id === "secretKey") {
+      setButtonDisabled(!(publicKey !== "" && e.target.value !== "" && bucketName !== ""));
+      setSecretKey(e.target.value);
+    } else if (e.target.id === "publicKey") {
+      setButtonDisabled(!(e.target.value !== "" && secretKey !== "" && bucketName !== ""));
+      setPublicKey(e.target.value);
+    } else if (e.target.id === "bucket") {
+      setButtonDisabled(!(e.target.value !== "" && secretKey !== "" && publicKey !== ""));
+      setBucketName(e.target.value);
+    }
+  };
+
+  const handleVimeoChange = (e) => {
+    if (e.target.id === "secretKey") {
+      setButtonDisabled(e.target.value === "");
+      setSecretKey(e.target.value);
+    }
   };
 
   const getOnChangeEvents = (e) => {
     setError(false);
-     
+    clearFieldError(e);
+
     // @ts-ignore
     switch (selectedPlatform.id) {
       case "mux":
       case "fastPix":
       case "cloudflare-stream":
-        if (e.target.id === "secretKey") {
-          publicKey !== "" && e.target.value !== "" ? setButtonDisabled(false) : setButtonDisabled(true);
-          setSecretKey(e.target.value);
-        } else if (e.target.id === "publicKey") {
-          e.target.value !== "" && secretKey !== "" ? setButtonDisabled(false) : setButtonDisabled(true);
-          setPublicKey(e.target.value);
-        }
+        handleKeyPairChange(e);
         break;
-
       case "api-video":
-        if (e.target.id === "secretKey") {
-          e.target.value !== "" ? setButtonDisabled(false) : setButtonDisabled(true);
-          setPublicKey(e.target.value);
-        }
+        handleApiVideoChange(e);
         break;
-
       case "s3":
-        if (e.target.id === "secretKey") {
-          publicKey !== "" && e.target.value !== "" && bucketName !== "" ? setButtonDisabled(false) : setButtonDisabled(true);
-          setSecretKey(e.target.value);
-        } else if (e.target.id === "publicKey") {
-          e.target.value !== "" && secretKey !== "" && bucketName !== "" ? setButtonDisabled(false) : setButtonDisabled(true);
-          setPublicKey(e.target.value);
-        } else if (e.target.id === "bucket") {
-          e.target.value !== "" && secretKey !== "" && publicKey !== "" ? setButtonDisabled(false) : setButtonDisabled(true);
-          setBucketName(e.target.value);
-        }
+        handleS3Change(e);
         break;
-
       case "vimeo":
-        if (e.target.id === "secretKey") {
-          e.target.value !== "" ? setButtonDisabled(false) : setButtonDisabled(true);
-          setSecretKey(e.target.value);
-        }
-        break
+        handleVimeoChange(e);
+        break;
       default:
-
-        return null
+        return null;
     }
   }
 
-  const setNotificationClose = (value: Boolean) => {
+  const setNotificationClose = (value: boolean) => {
     
     // @ts-ignore
     setError(value);
@@ -204,7 +267,7 @@ const PlatformForm = (props: Form) => {
         <Heading>Enter your {platformName} Credentials</Heading>
         <p className="text-slate-gray font-normal text-[15px] py-[10px]">Your credentials are stored locally and encrypted in transit.</p>
         {renderInputs()}
-        <button type="submit" disabled={buttonDisabled} className={`${buttonDisabled ? "opacity-[50%] bg-black" : "hover:cursor-pointer"} mt-4 bg-black hover:bg-gray-800 text-white w-full max-w-[400px] h-[48px] rounded p-[12px]`}>
+        <button type="submit" disabled={buttonDisabled} className={`${buttonDisabled ? "opacity-[50%] bg-black cursor-not-allowed" : "hover:cursor-pointer"} mt-4 bg-black hover:bg-gray-800 text-white w-full max-w-[400px] h-[48px] rounded p-[12px]`}>
           Verify Credentials
         </button>
       </form>

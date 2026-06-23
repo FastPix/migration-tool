@@ -84,7 +84,12 @@ const PlatformList: React.FC<PlatformListProps> = (props) => {
       <p className="font-normal text-[15px] pt-[5px]">{text}</p>
       <div className="w-full mt-[40px] gap-y-[20px] md:gap-x-[40px] md:flex md:flex-row flex-wrap">
         {(props?.type === "source" ? platform.source : platform.destination).map((each) => (
-          <div key={each.id} className="w-full max-w-[100%] md:max-w-[30%] flex flex-col items-center" onClick={() => handlePlatformClick(each)}>
+          <button
+            key={each.id}
+            type="button"
+            className="w-full max-w-[100%] md:max-w-[30%] flex flex-col items-center"
+            onClick={() => handlePlatformClick(each)}
+          >
             <div className="w-full hover:border hover:border-black border border-foggy-gray rounded-lg h-[112px] flex justify-center items-center">
               <span
                 style={{
@@ -95,11 +100,11 @@ const PlatformList: React.FC<PlatformListProps> = (props) => {
                   alignItems: "center"
                 }}
               >
-                <img src={each.logo} />
+                <img src={each.logo} alt={each.name} />
               </span>
             </div>
             <div className="pt-[20px] text-slate-gray text-center mb-[20px] md:mb-[0px]">{each.name}</div>
-          </div>
+          </button>
         ))}
       </div>
     </div>

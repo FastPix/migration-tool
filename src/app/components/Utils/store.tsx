@@ -50,7 +50,7 @@ type MigrationActions = {
 };
 
 interface Error {
-  success: Boolean,
+  success: boolean,
   status: string,
   message: string
 }
@@ -76,14 +76,17 @@ const useMigrationStore = create<MigrationState & MigrationActions>()(
       failedVideos: [],
 
       setCurrentStep: (step: MigrationStep) => {
+        console.log(`[Store] Step changed → ${step}`);
         set({ currentStep: step });
       },
 
       setAssetFilter: (filter: string[] | null) => {
+        console.log("[Store] Asset filter set:", filter);
         set({ assetFilter: filter });
       },
 
       setPlatform: (type: 'source' | 'destination', platform: Platform | null) => {
+        console.log(`[Store] Platform set — type=${type}, id=${platform?.id ?? "null"}`);
         if (type === 'source') {
           set({ sourcePlatform: platform });
         } else {
@@ -92,23 +95,25 @@ const useMigrationStore = create<MigrationState & MigrationActions>()(
       },
 
       setOriginVideos: (videos: Video[]) => {
+        console.log(`[Store] Origin videos set — count=${videos.length}`);
         set({ originVideosList: videos });
         set({ isVideosMigrating: false });
       },
 
       setIsVideosMigrating: (value: boolean) => {
+        console.log(`[Store] isVideosMigrating → ${value}`);
         set({ isVideosMigrating: value });
       },
 
       setMigrationError: (error: Error[]) => {
-        
-        {/* @ts-ignore */}
+        console.error("[Store] Migration error set:", error);
+        // @ts-ignore
         set({ migrationError: error });
       },
 
       setFailedVideos: (videos: FailedVideo[])=> {
-        
-        {/* @ts-ignore */}
+        console.log(`[Store] Failed videos set — count=${videos.length}`, videos);
+        // @ts-ignore
        set({failedVideos: videos})
       }
     })),

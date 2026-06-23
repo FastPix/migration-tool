@@ -18,11 +18,11 @@ const ErrorUI = ({title, description, code, icon}:ErrorInterface) => {
           }
         </span>
         <div className="w-full flex flex-col justify-center text-[1.8rem]">
-          <span className="pr-2 md:pr-1 text-center">&nbsp;{code ? code : ""}!</span>
-          <span className="text-center text-[18px]">{title ? title : ""}</span>
+          <span className="pr-2 md:pr-1 text-center">&nbsp;{code ?? ""}!</span>
+          <span className="text-center text-[18px]">{title ?? ""}</span>
         </div>
         <div className="w-full flex flex-row justify-center items-centertext-lg">
-          {description ? description : ""}
+          {description ?? ""}
         </div>
       </div>
     </div>

@@ -1,26 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, ListObjectsV2Command, GetObjectCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
 
 import { PlatformCredentials } from '../../components/Utils/types';
 import processVideosForPlatform from '../../components/Utils/fastpix';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import https from 'https';
-
-export async function getBucketRegion(bucketUrl: string) {
-    return new Promise((resolve, reject) => {
-        const req = https.request(bucketUrl, { method: 'HEAD' }, (res) => {
-            const region = res.headers['x-amz-bucket-region'];
-            if (region) {
-                resolve(region);
-            } else {
-                reject('Bucket region not found in headers');
-            }
-        });
-
-        req.on('error', reject);
-        req.end();
-    });
-}
+import https from 'node:https';
+import { getBucketRegion } from '../s3Utils';
 
 const isPublicObject = (bucket: string, key: string): Promise<boolean> => {
     const url = `https://${bucket}.s3.amazonaws.com/${encodeURIComponent(key)}`;
@@ -43,8 +28,9 @@ const isPublicObject = (bucket: string, key: string): Promise<boolean> => {
 };
 
 const fetchS3Media = async (sourcePlatform: PlatformCredentials) => {
+    console.log("[S3] Fetching videos from Amazon S3");
     const { publicKey, secretKey, additionalMetadata } = sourcePlatform.credentials;
-    const { bucket, region } = additionalMetadata;
+    const { bucket } = additionalMetadata;
     const bucketUrl = `https://${bucket}.s3.amazonaws.com`
     const s3Region = await getBucketRegion(bucketUrl);
 
@@ -91,6 +77,7 @@ const fetchS3Media = async (sourcePlatform: PlatformCredentials) => {
             };
         }));
 
+        console.log(`[S3] Fetched ${signedUrls.length} video(s) from bucket`);
         return {
             success: true,
             videos: signedUrls
@@ -108,6 +95,7 @@ export async function POST(request: NextRequest) {
         const data = await request.json();
         const sourcePlatform = data?.sourcePlatform as PlatformCredentials;
         const destinationPlatform = data?.destinationPlatform as PlatformCredentials;
+        console.log(`[S3 POST] Migration started — source=${sourcePlatform?.id}, destination=${destinationPlatform?.id}`);
         const amazonS3Response = await fetchS3Media(sourcePlatform); // amazonS3 Response
 
         if (!amazonS3Response.success) {
@@ -124,6 +112,7 @@ export async function POST(request: NextRequest) {
         const createdMedia = result.createdMedia; // created vidoes in fastpix
         const failedMedia = result.failedMedia; // failed vidoes in fastpix
 
+        console.log(`[S3 POST] FastPix processing done — created=${createdMedia.length}, failed=${failedMedia.length}`);
         if (createdMedia.length > 0 || failedMedia.length > 0) { // Either video is created or failed to create we send the response
 
             return NextResponse.json(

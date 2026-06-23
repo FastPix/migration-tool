@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { Inter } from 'next/font/google'
 
 import Header from "./components/Header";
@@ -21,6 +22,17 @@ const inter = Inter({
 const Home = () => {
   const currentStep = useMigrationStore((state) => state.currentStep);
 
+  const stepComponents: Record<string, ReactNode> = {
+    "select-source": <PlatformList type="source" />,
+    "set-source-credentials": <PlatformForm type="source" />,
+    "set-video-filter": <VideoOptions />,
+    "select-destination": <PlatformList type="destination" />,
+    "set-destination-credentials": <PlatformForm type="destination" />,
+    "set-import-settings": <VideoSettings />,
+    "review": <Review />,
+    "migration-status": <MigrationStatus />,
+  };
+
   return (
     <div className={`flex flex-col h-screen font-inter ${inter.className}`}>
       <Header />
@@ -29,20 +41,7 @@ const Home = () => {
           <SideBar />
         </div>
           <div className="flex flex-grow flex-col justify-between w-full overflow-auto">
-            {
-              currentStep === "select-source" ? (
-                <PlatformList type="source" />
-              ) : currentStep === "set-source-credentials" ? (
-                <PlatformForm type="source" />
-              ) : currentStep === "set-video-filter" ? (
-                <VideoOptions />
-              ) : currentStep === "select-destination" ? (
-                <PlatformList type="destination" />
-              ) : currentStep === "set-destination-credentials" ? (
-                <PlatformForm type="destination" />
-              ) : currentStep === "set-import-settings" ?
-                <VideoSettings /> : currentStep === "review" ? <Review /> : currentStep === "migration-status" ? <MigrationStatus /> : ""
-            }
+            {stepComponents[currentStep] ?? ""}
             <Footer />
         </div>
       </div>

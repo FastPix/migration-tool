@@ -65,7 +65,7 @@ const Notification = (props: NotificationInterface) => {
           <div className="w-[20px] justify-end relative">
             
             {/* @ts-ignore */}
-            <button variant="ghost" width="20px" height="20px" onClick={props.onClose} className=" absolute w-[20px] h-[20px] flex items-center justify-center">
+            <button width="20px" height="20px" onClick={props.onClose} className=" absolute w-[20px] h-[20px] flex items-center justify-center">
               <span className="w-[14px] h-[14px] absolute top-[15px]"><CloseIcon /></span>
             </button>
           </div>
@@ -96,7 +96,7 @@ const Notification = (props: NotificationInterface) => {
           <div className="w-[20px] justify-end items-center relative">
             
             {/* @ts-ignore */}
-            <button variant="ghost" width="20px" height="20px" onClick={props.onClose} className=" absolute w-[20px] h-[20px] flex items-center justify-center">
+            <button width="20px" height="20px" onClick={props.onClose} className=" absolute w-[20px] h-[20px] flex items-center justify-center">
               <span className="w-[14px] h-[14px] absolute top-[15px] mr-[50px]"><CloseIcon /></span>
             </button>
           </div>
@@ -108,9 +108,14 @@ const Notification = (props: NotificationInterface) => {
     }
   };
 
+  let animationClass = "";
+  if (toggleNotification !== null) {
+    animationClass = toggleNotification ? "slideIn" : "slideOut";
+  }
+
   return (
     <ReactPortal wrapperId="notification">
-      <div className={`fixed right-2 top-6 w-[calc(100%_-_20px_-_20px)] rounded-[10px] max-w-[510px] z-[99999] animate ${toggleNotification === null ? "" : toggleNotification ? "slideIn" : "slideOut"}`}>
+      <div className={`fixed right-2 top-6 w-[calc(100%_-_20px_-_20px)] rounded-[10px] max-w-[510px] z-[99999] animate ${animationClass}`}>
         {notificationUi()}
       </div>
     </ReactPortal>

@@ -3,7 +3,6 @@ import FailedIcon from "../Icons/FailedIcon";
 export default function FailedVideos({ failedVideos }) {
 
     return (
-        <>
         <div className="w-full">
             <div className="grid grid-cols-[50px_2fr_1fr_1fr] bg-pale-silver static top-0">
                 <div className="px-4 text-[12px] text-grayish-blue py-2 text-left">SL.NO</div>
@@ -14,7 +13,7 @@ export default function FailedVideos({ failedVideos }) {
 
             {failedVideos?.map((video, index) => (
                 <div
-                    key={index}
+                    key={video?.videoId ?? `${video?.code}-${video?.message}`}
                     className="border-b last:border-none overflow-hidden"
                 >
                     <div className="grid grid-cols-[50px_2fr_1fr_1fr] bg-white m-2">
@@ -29,6 +28,5 @@ export default function FailedVideos({ failedVideos }) {
                 </div>
             ))}
         </div>
-        </>
     );
 }

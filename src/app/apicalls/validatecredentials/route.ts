@@ -1,6 +1,6 @@
 import Mux from "@mux/mux-node";
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
-import { getBucketRegion } from "../amazonS3/route";
+import { getBucketRegion } from "../s3Utils";
 
 interface AdditionalMetaData {
   environment?: string;
@@ -17,6 +17,7 @@ interface VideoPlatformCredentails {
 
 // Verify API Video Credentials
 async function verifyApiVideo(data: VideoPlatformCredentails) {
+  console.log("[ValidateCredentials] Verifying API Video credentials");
   const endpoint = data.additionalMetadata?.environment === 'sandbox'
     ? "https://sandbox.api.video"
     : "https://ws.api.video";
@@ -25,7 +26,7 @@ async function verifyApiVideo(data: VideoPlatformCredentails) {
     const response = await fetch(`${endpoint}/videos`, {
       method: 'GET',
       headers: {
-        Authorization: `Basic ${btoa(data.secretKey as string)}`,
+        Authorization: `Basic ${btoa(data.secretKey)}`,
         'Content-Type': 'application/json',
       },
     });
@@ -44,13 +45,16 @@ async function verifyApiVideo(data: VideoPlatformCredentails) {
 
 // Verify FastPix Credentials
 async function verifyFastPix(data: VideoPlatformCredentails) {
-  const endpoint = "https://v1.fastpix.io/on-demand";
+  console.log("[ValidateCredentials] Verifying FastPix credentials");
+  const endpoint = "https://api.fastpix.com/v1/on-demand";
+
+  const credentials = `${data.publicKey}:${data.secretKey}`;
 
   try {
     const response = await fetch(`${endpoint}`, {
       method: 'GET',
       headers: {
-        Authorization: `Basic ${btoa(`${data.publicKey}:${data.secretKey}`)}`,
+        Authorization: `Basic ${btoa(credentials)}`,
         'Content-Type': 'application/json',
       },
     });
@@ -69,6 +73,7 @@ async function verifyFastPix(data: VideoPlatformCredentails) {
 
 // Verify Vimeo Credentials
 async function verifyVimeo(data: VideoPlatformCredentails) {
+  console.log("[ValidateCredentials] Verifying Vimeo credentials");
   const endpoint = "https://api.vimeo.com";
 
   try {
@@ -93,12 +98,14 @@ async function verifyVimeo(data: VideoPlatformCredentails) {
 // POST Handler
 export async function POST(request: Request) {
   const data: VideoPlatformCredentails = await request.json();
+  console.log(`[ValidateCredentials POST] Validating credentials for platformId=${data.additionalMetadata?.platformId}`);
 
   switch (data.additionalMetadata?.platformId) {
     case 'api-video':
       return await verifyApiVideo(data);
 
     case 'cloudflare-stream': {
+      console.log("[ValidateCredentials] Verifying Cloudflare Stream credentials");
       try {
         const response = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
           headers: {
@@ -129,14 +136,14 @@ export async function POST(request: Request) {
     }
 
     case 's3': {
-
+      console.log("[ValidateCredentials] Verifying Amazon S3 credentials");
       const bucketUrl = `https://${data.additionalMetadata.bucket}.s3.amazonaws.com`;
       const region = await getBucketRegion(bucketUrl);
 
       const client = new S3Client({
         credentials: {
           accessKeyId: data.publicKey,
-          secretAccessKey: data.secretKey!,
+          secretAccessKey: data.secretKey,
         },
         region: region,
       });
@@ -156,6 +163,7 @@ export async function POST(request: Request) {
     }
 
     case 'mux': {
+      console.log("[ValidateCredentials] Verifying Mux credentials");
       const mux = new Mux({
         tokenId: data.publicKey,
         tokenSecret: data.secretKey,

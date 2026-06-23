@@ -50,37 +50,47 @@ const VideoSettings = () => {
   const platformFields = platformOptions.find((field) => field.id === destinationPlatform?.id);
   
   // @ts-ignore
-  const handleFieldChange = (field, value) => {
-    if (field.type === 'checkbox') {
-      const updatedConfig = value ? { ...config, [field.name]: '1' } : { ...config };
-      if (!value) {
-        
-        // @ts-ignore
-        delete updatedConfig[field.name];
-      }
-      setConfig(updatedConfig);
+  const handleCheckboxChange = (field, value) => {
+    const updatedConfig = value ? { ...config, [field.name]: '1' } : { ...config };
+    if (!value) {
+
+      // @ts-ignore
+      delete updatedConfig[field.name];
     }
-    else if (field.type === 'multi-checkbox' || field.name === 'playbackPolicy') {
-      if (field.name === 'playbackPolicy') {
-        const updatedConfig = { ...config, [field.name]: [value.optionValue] };
-        setConfig(updatedConfig);
-      } else {
-        
-        // @ts-ignore
-        let newArray = config[field.name] || [];
-        if (value.checked) {
-          newArray = [...newArray, value.optionValue];
-        } else {
-          newArray = newArray.filter((item) => item !== value.optionValue);
-        }
-        const updatedConfig = newArray.length > 0 ? { ...config, [field.name]: newArray } : { ...config };
-        if (newArray.length === 0) {
-          
-          // @ts-ignore
-          delete updatedConfig[field.name];
-        }
-        setConfig(updatedConfig);
-      }
+    setConfig(updatedConfig);
+  };
+
+  // @ts-ignore
+  const handleMultiCheckboxChange = (field, value) => {
+    if (field.name === 'playbackPolicy') {
+      const updatedConfig = { ...config, [field.name]: [value.optionValue] };
+      setConfig(updatedConfig);
+      return;
+    }
+
+    // @ts-ignore
+    let newArray = config[field.name] || [];
+    if (value.checked) {
+      newArray = [...newArray, value.optionValue];
+    } else {
+      newArray = newArray.filter((item) => item !== value.optionValue);
+    }
+    const updatedConfig = newArray.length > 0 ? { ...config, [field.name]: newArray } : { ...config };
+    if (newArray.length === 0) {
+
+      // @ts-ignore
+      delete updatedConfig[field.name];
+    }
+    setConfig(updatedConfig);
+  };
+
+  // @ts-ignore
+  const handleFieldChange = (field, value) => {
+    console.log(`[VideoSettings] Field changed — name=${field.name}, value=`, value);
+    if (field.type === 'checkbox') {
+      handleCheckboxChange(field, value);
+    } else if (field.type === 'multi-checkbox' || field.name === 'playbackPolicy') {
+      handleMultiCheckboxChange(field, value);
     } else {
       setConfig({ ...config, [field.name]: value });
     }
@@ -89,7 +99,7 @@ const VideoSettings = () => {
   // @ts-ignore
   const onSubmit = async (e) => {
     e.preventDefault();
-    
+    console.log("[VideoSettings] Import settings confirmed:", config);
     // @ts-ignore
     setPlatform(platform.type, { ...platform, config });
     setCurrentStep('review');

@@ -5,6 +5,7 @@ import { PlatformCredentials } from '../../components/Utils/types';
 
 // Fetch media from API Video
 const fetchApiVideoMedia = async (sourcePlatform: PlatformCredentials) => {
+    console.log("[ApiVideo] Fetching videos from API Video");
     const credentials = sourcePlatform?.credentials;
     const endpoint = sourcePlatform?.credentials?.additionalMetadata?.environment === 'sandbox' ? "https://sandbox.api.video/videos" : "https://ws.api.video/videos"
     const videos: any[] = [];
@@ -33,6 +34,7 @@ const fetchApiVideoMedia = async (sourcePlatform: PlatformCredentials) => {
             currentPage++;
         } while (currentPage <= totalPages);
 
+        console.log(`[ApiVideo] Fetched ${videos.length} video(s) from API Video`);
         return {
 
             success: true,
@@ -54,6 +56,7 @@ const fetchApiVideoMedia = async (sourcePlatform: PlatformCredentials) => {
 export async function POST(request: NextRequest) {
     try {
         const { sourcePlatform, destinationPlatform } = await request.json();
+        console.log(`[ApiVideo POST] Migration started — source=${sourcePlatform?.id}, destination=${destinationPlatform?.id}`);
 
         const apivideoResponse = await fetchApiVideoMedia(sourcePlatform);
         if (!apivideoResponse.success) {
@@ -70,6 +73,7 @@ export async function POST(request: NextRequest) {
         const createdMedia = result.createdMedia
         const failedMedia = result.failedMedia
 
+        console.log(`[ApiVideo POST] FastPix processing done — created=${createdMedia.length}, failed=${failedMedia.length}`);
         if (createdMedia.length > 0 || failedMedia.length > 0) {
 
             return NextResponse.json(

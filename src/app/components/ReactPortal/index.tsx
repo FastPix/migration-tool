@@ -27,7 +27,7 @@ const ReactPortal = ({children, wrapperId = "outer-block"}:ReactPortalInterface)
     
     return () => {
       if (systemCreated && element?.parentNode) {
-        element.parentNode.removeChild(element);
+        element.remove();
       }
     };
   }, [wrapperId]);

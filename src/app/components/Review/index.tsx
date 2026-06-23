@@ -14,6 +14,7 @@ export default function Review() {
     const setFailedVideos = useMigrationStore((state)=> state.setFailedVideos);
 
     const changeCurrentStep = async () => {
+        console.log(`[Review] Starting migration — source=${sourcePlatform?.id}, destination=${destinationPlatform?.id}`);
         setIsVideosMigrating(true);
         const requestBody = {
             "sourcePlatform": sourcePlatform,
@@ -24,6 +25,7 @@ export default function Review() {
         let result
 
         if (sourcePlatform?.id === "mux") {
+            console.log("[Review] Calling /apicalls/mux");
             const data = await fetch("/apicalls/mux", {
                 method: 'POST',
                 body: JSON.stringify(requestBody),
@@ -31,6 +33,7 @@ export default function Review() {
 
             result = data
         } else if (sourcePlatform?.id === "api-video") {
+            console.log("[Review] Calling /apicalls/apivideo");
             const data = await fetch("/apicalls/apivideo", {
                 method: 'POST',
                 body: JSON.stringify(requestBody),
@@ -38,6 +41,7 @@ export default function Review() {
 
             result = data
         } else if (sourcePlatform?.id === "cloudflare-stream") {
+            console.log("[Review] Calling /apicalls/cloudfare");
             const data = await fetch("/apicalls/cloudfare", {
                 method: 'POST',
                 body: JSON.stringify(requestBody),
@@ -45,6 +49,7 @@ export default function Review() {
 
             result = data
         } else if (sourcePlatform?.id === "vimeo") {
+            console.log("[Review] Calling /apicalls/vimeo");
             const data = await fetch("/apicalls/vimeo", {
                 method: 'POST',
                 body: JSON.stringify(requestBody),
@@ -52,6 +57,7 @@ export default function Review() {
 
             result = data
         } else if (sourcePlatform?.id === "s3") {
+            console.log("[Review] Calling /apicalls/amazonS3");
             const data = await fetch("/apicalls/amazonS3", {
                 method: 'POST',
                 body: JSON.stringify(requestBody),
@@ -62,21 +68,24 @@ export default function Review() {
         const response = await result?.json()
 
         if (result?.status === 200) {
+            console.log(`[Review] Migration succeeded — created=${response?.createdMedia?.length ?? 0}, failed=${response?.failedMedia?.length ?? 0}`);
             if  (response?.createdMedia?.length >= 1) {
                 setOriginvidoesList(response?.createdMedia);
-            } if (response?.failedMedia?.length >= 1) {
+            }
+            if (response?.failedMedia?.length >= 1) {
                 setFailedVideos(response?.failedMedia)
             }
             setIsVideosMigrating(false);
         } else {
+            console.error(`[Review] Migration failed — status=${result?.status}, message=${response?.message ?? response?.error}`);
             setIsVideosMigrating(false);
-  
+
             setMigrationError([
                 {   success: true,
                     status: result?.status,
                     message: response?.message ?? response?.error,
                 },
-            ]); 
+            ]);
         }
     }
 
