@@ -19,7 +19,7 @@ export default function FailedVideos({ failedVideos }) {
                     <div className="grid grid-cols-[50px_2fr_1fr_1fr] bg-white m-2">
                         <div className="px-4 py-2 text-[12px] text-left">{index + 1}</div>
                         <div className="px-4 py-2 text-[12px] text-left">{video?.videoId ?? null}</div>
-                        <div className="px-4 py-2 text-[12px] text-left">{video?.code ?? 400}</div>
+                        <div className="px-4 py-2 text-[12px] text-left">{video?.code ?? "\u2014"}</div>
                         <div className="px-4 py-2 text-[12px] text-left flex gap-x-2 bg-blush-pink rounded">
                             <span className="text-crimson-red"><FailedIcon /></span>
                             <span className="text-crimson-red font-semibold">{video?.message ?? null}</span>

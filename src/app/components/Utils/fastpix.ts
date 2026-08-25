@@ -8,6 +8,10 @@ interface Videos {
   tags?: Array<string>;
   metadata?: Array<string>;
   ETag?: string;
+  // Optional, per-video explanation for why `mp4_url` is empty. Only the Vimeo
+  // route populates it today; every other platform leaves it undefined and
+  // falls back to the generic message below.
+  unavailableReason?: string;
 }
 
 interface CreateResult {
@@ -185,7 +189,7 @@ const processVideosForPlatform = async (
     return Promise.resolve({
       videoId,
       success: false as const,
-      message: "MP4 URL is 'none'",
+      message: video.unavailableReason ?? "MP4 URL is 'none'",
     });
   });
 
